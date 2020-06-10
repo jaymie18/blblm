@@ -19,6 +19,9 @@ knitr::opts_chunk$set(
 <h3>Introduction</h3> <br>
 This project is to create, modify and improve the bag of little bootstrap R packages. The R package is called the blblm and it is designed primarily for use by individuals who are interested in data analysis to help them perform a weighted bootstrap linear regression. Additionally, this package provides a list of other functions to estimates based on the linear regression. This package is useful for data which may not meet the assumption of parametric linear regression such as small sample sizes, asymmetric statistical distribution. Since some students may only want to have preliminary understanding of the data, this r package may help them to achieve their result.
 
+
+**The restriction of the function does not omit na datas, to further usage of the package, please use na.omit(data) before using the function.
+
 ```{r setup}
 library(blblm)
 library(parallel)
@@ -26,6 +29,7 @@ library(bench)
 df <- data.frame(mtcars)
 df <- na.omit(mtcars)
 ```
+
 
 
 <h3>Features</h3>
