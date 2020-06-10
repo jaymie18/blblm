@@ -2,9 +2,16 @@
 % Please edit documentation in R/blblm.R
 \name{lm1}
 \alias{lm1}
-\title{estimate the regression estimates based on given the number of repetitions}
+\title{linear regression with rcpp}
 \usage{
 lm1(formula, data, freqs)
+}
+\arguments{
+\item{formula}{the interest user want from data}
+
+\item{data}{the dataset}
+
+\item{freqs}{the times user want the regression weight on}
 }
 \description{
 estimate the regression estimates based on given the number of repetitions

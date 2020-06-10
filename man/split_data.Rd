@@ -2,10 +2,16 @@
 % Please edit documentation in R/blblm.R
 \name{split_data}
 \alias{split_data}
-\title{split data into m parts of approximated equal sizes}
+\title{split data}
 \usage{
 split_data(data, m)
 }
+\arguments{
+\item{data}{the dataset
+split data into m parts of approximated equal sizes}
+
+\item{m}{numbers of subsamples created}
+}
 \description{
-split data into m parts of approximated equal sizes
+split data
 }

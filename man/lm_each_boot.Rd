@@ -2,9 +2,16 @@
 % Please edit documentation in R/blblm.R
 \name{lm_each_boot}
 \alias{lm_each_boot}
-\title{compute the regression estimates for a blb dataset}
+\title{applied regression}
 \usage{
 lm_each_boot(formula, data, n)
+}
+\arguments{
+\item{formula}{the interest user want from data}
+
+\item{data}{the dataset}
+
+\item{n}{numbers of subsamples created}
 }
 \description{
 compute the regression estimates for a blb dataset

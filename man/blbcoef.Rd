@@ -2,9 +2,13 @@
 % Please edit documentation in R/blblm.R
 \name{blbcoef}
 \alias{blbcoef}
-\title{compute the coefficients from fit}
+\title{coefficient of blblm}
 \usage{
 blbcoef(fit)
+}
+\arguments{
+\item{fit}{the linear regression function
+compute the coefficients from fit}
 }
 \description{
 compute the coefficients from fit

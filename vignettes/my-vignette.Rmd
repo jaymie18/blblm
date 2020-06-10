@@ -1,0 +1,183 @@
+---
+title: "Bag of Little Bootstrap"
+author: "Jaymie Tam"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{my-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+<h3>Introduction</h3> <br>
+This project is to create, modify and improve the bag of little bootstrap R packages. The R package is called the blblm and it is designed primarily for use by individuals who are interested in data analysis to help them perform a weighted bootstrap linear regression. Additionally, this package provides a list of other functions to estimates based on the linear regression. This package is useful for data which may not meet the assumption of parametric linear regression such as small sample sizes, asymmetric statistical distribution. Since some students may only want to have preliminary understanding of the data, this r package may help them to achieve their result.
+
+```{r setup}
+library(blblm)
+library(parallel)
+library(bench)
+df <- data.frame(mtcars)
+df <- na.omit(mtcars)
+```
+
+
+<h3>Features</h3>
+<br>
+**Bootstrap Linear Regression(blblm)**<br>
+<br>
+Based on the user’s interest in data, the function performs bootstrap linear regression by splitting data into subsamples and sample n from b with replacement which is different from ordinary bootstrap.
+<br>
+<br>
+Coefficient of the desired explanatory/independent variable<br>
+```{r, warning=FALSE}
+#arr_delay time against Sepal
+#m = 3 subsamples
+#B = 100 bootstraps
+model <- blblm(mpg ~ wt * hp, data = df, m = 3, B = 1000)
+coef(model)
+```
+
+-Formula of the regression model<br>
+```{r}
+formula(model)
+```
+Estimates of each bootstrap coefficient result
+```{r}
+#first and second output of the estimates from bootstrap
+model$estimates$`1`[[1]]
+model$estimates$`1`[[2]]
+```
+
+**Bootstrap Linear Regression with Parallelization**<br>
+It performs the same result as the Bootstrap Linear Regression(blblm), and it adds a feature of parallelization to speed up for larger dataset.<br>
+
+```{r}
+cl <- makeCluster(2)
+#cl = cluster user uses
+model2 <- blblm_par(mpg ~ wt * hp, data = mtcars, m = 3, B = 100, cl)
+parallel::stopCluster(cl)
+```
+Formula of the regression model<br>
+
+```{r}
+model2$formula
+```
+
+Coefficient of the desired explanatory/independent variable<br>
+```{r}
+coef(model2)
+```
+
+Estimates of each bootstrap coefficient result
+```{r}
+#first output of the estimates from bootstrap
+model2$estimates$`1`[[1]]
+model2$estimates$`1`[[2]]
+```
+<br>
+**Confidence Interval(confint)**<br>
+Confidence Interval for explanatory variables in a user's desired confidence level.
+```{r}
+confint(model, level = 0.95)
+```
+
+**Predict New Data**<br>
+It allows user to predict new data based on the linear regression model 
+```{r}
+pred <- predict(model, data.frame(wt = c(rnorm(100)), hp = c(rnorm(100))))
+head(pred)
+#user can choose to include condifence level
+pred2 <- predict(model, data.frame(wt = c(rnorm(100)), hp = c(rnorm(100))), confidence = TRUE)
+head(pred2)
+```
+**Sigma with confidence level**
+Compute the confidence interval for sigma
+```{r}
+ sigma(model, confidence = TRUE)
+```
+
+<h3>Source of Package</h3>
+
+<h4>Rcpp</h4><br>
+The use of C++ library RcppArmadillo allows us to compute various matrix multiplication and decomposition to improve the speed of the function. This package include a blblm or blblm_par function which is in the use of fastlm function. In the use of linear algebra the function was able to compute coef, weight residual and sigma by matrix transformation and multiplication.
+
+Rcpp fastlm function computes of the following estimates:<br>
+coefficient, residuals, rank, degree of freedom, sigma
+
+
+```{Rcpp, warning = FALSE}
+//Rcpp function for weight linear regression
+#include <RcppArmadillo.h>
+// [[Rcpp::depends(RcppArmadillo)]]
+
+using namespace Rcpp;
+
+// [[Rcpp::export]]
+List fastlm(const arma::mat& X, const arma::colvec& y, const arma::vec& wi) {
+    int n = X.n_rows, k = X.n_cols, r = rank(X);
+    
+    arma::mat weight = diagmat(wi); //get the weight vector
+      
+    arma::colvec coef = arma::solve(((trans(X))*weight*X) , ((trans(X)*weight)*y));    
+    // fit model y ~ X
+    
+    arma::colvec res  = y - X*coef;           // residuals
+    
+    double weight_sum = accu(wi);
+    
+    double num = arma::as_scalar(( accu( weight * (pow(res,2.0)) ))); 
+    double denom = weight_sum - r;
+    double s =  sqrt(num / denom);
+                                                        
+    return List::create(Named("coefficients") = coef,
+                        Named("weight sum")   = weight_sum,
+                        Named("sigma")         = s,
+                        Named("df.residual")  = n - k,
+                        Named("rank")         = r,
+                        Named("response")     = y,
+                        Named("Res")  = res,
+                        Named("weight") = wi);
+}
+
+```
+
+Compare the time of fastlm with weighted linear regression(lm.wif) and it is two times faster than the speed of weighted lm.
+
+```{r, paged.print = FALSE}
+#transform the response and explanatory variable to fit the function
+x <- model.matrix(mpg ~ wt * hp , mtcars)
+y <- model.response(model.frame(mpg ~ wt * hp, mtcars))
+w <- rmultinom(1, 10, rep(1, nrow(mtcars)))
+
+#comapre three lm functions
+bench::mark(
+  fastlm = {fastlm(x,y,w)},
+  weighted_lm = {lm.wfit(x,y,w)},
+  check = FALSE, relative = TRUE
+)
+```
+
+<h4>Parallelization</h4><br>
+The use of library(parallel) allows us to create the blblm_par function to include parallelizatoin for user to choose to work with cluster to speed up the process.
+
+The following demostrated the speed of using 2 CPU is almost two times faster than the orignial blblm. It may benefit users who want to process large datasets.
+```{r, warning=FALSE, message=FALSE, paged.print = FALSE}
+cl <- makeCluster(2)
+bench::mark(
+  blblm_par(mpg ~ wt * hp, data = mtcars, m = 2, B = 1000, cl),
+  blblm(mpg ~ wt * hp, data = mtcars, m = 2, B = 1000),
+  check = FALSE, relative = TRUE
+)
+stopCluster(cl)
+```
+
+Cited:
+Armadillo Library http://arma.sourceforge.net/
+
