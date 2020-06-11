@@ -5,7 +5,9 @@
 \title{blblm: Bag Of Little Bootstrap With Linear Regression and Confidence Interval}
 \description{
 This package perform bag of little bootstrap linear regression with the improvment 
-             of parallelization and use of Rcpp in linear regression to speed up the functions.
+             of parallelization and use of Rcpp in linear regression to speed up the functions,
+             with the addtional functions to calculate weighted sigma, confidence interval, predict
+             new data using the same file.
 }
 \details{
 Linear Regression with Bag of Bootstraps

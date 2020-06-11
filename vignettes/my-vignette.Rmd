@@ -66,7 +66,7 @@ It performs the same result as the Bootstrap Linear Regression(blblm), and it ad
 cl <- makeCluster(2)
 #cl = cluster user uses
 model2 <- blblm_par(mpg ~ wt * hp, data = mtcars, m = 3, B = 100, cl)
-parallel::stopCluster(cl)
+stopCluster(cl)
 ```
 Formula of the regression model<br>
 
@@ -110,7 +110,7 @@ Compute the confidence interval for sigma
 <h3>Source of Package</h3>
 
 <h4>Rcpp</h4><br>
-The use of C++ library RcppArmadillo allows us to compute various matrix multiplication and decomposition to improve the speed of the function. This package include a blblm or blblm_par function which is in the use of fastlm function. In the use of linear algebra the function was able to compute coef, weight residual and sigma by matrix transformation and multiplication.
+The use of C++ library RcppArmadillo allows us to compute various matrix multiplication and decomposition to improve the speed of the function. This package include a blblm or blblm_par function which is in the use of fastlm function. In the use of linear algebra the function was able to compute coef, weight residual and sigma by matrix transformation and multiplication. When we calculation the coefficient and sigma, we accounted for weight generate from a multinomial distribution.
 
 Rcpp fastlm function computes of the following estimates:<br>
 coefficient, residuals, rank, degree of freedom, sigma
@@ -132,7 +132,7 @@ List fastlm(const arma::mat& X, const arma::colvec& y, const arma::vec& wi) {
     arma::colvec coef = arma::solve(((trans(X))*weight*X) , ((trans(X)*weight)*y));    
     // fit model y ~ X
     
-    arma::colvec res  = y - X*coef;           // residuals
+    arma::colvec res  = y - X*coef; // residuals
     
     double weight_sum = accu(wi);
     
@@ -171,7 +171,24 @@ bench::mark(
 <h4>Parallelization</h4><br>
 The use of library(parallel) allows us to create the blblm_par function to include parallelizatoin for user to choose to work with cluster to speed up the process.
 
-The following demostrated the speed of using 2 CPU is almost two times faster than the orignial blblm. It may benefit users who want to process large datasets.
+The use of library(parallel) allow this function to use parLapply in replacement of map to perform parallization.
+```{r}
+#parallel function
+blblm_par <- function(formula, data, m, B, cl) {
+  data_list <- blblm:::split_data(data, m)
+  n <- nrow(data)
+  estimates <- parLapply(cl, data_list, function(data, formula,n, B){
+    blblm::lm_each_subsample(
+      formula = formula, data = data , n = n, B = B)
+  }, formula = formula, n = n , B = B)
+  res <- list(estimates = estimates, formula = formula)
+  class(res) <- "blblm"
+  res
+}
+```
+
+The following demostrated the speed of using 2 CPU is almost two times faster than the orignial blblm. It may benefit users who want to process large datasets. It is typically practical for user who needs to process larger data set and use cluster to perform. 
+
 ```{r, warning=FALSE, message=FALSE, paged.print = FALSE}
 cl <- makeCluster(2)
 bench::mark(

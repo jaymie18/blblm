@@ -19,13 +19,13 @@ List fastlm(const arma::mat& X, const arma::colvec& y, const arma::vec& wi) {
 
   arma::colvec res  = y - X*coef; // residuals
 
-  double weight_sum = accu(wi);
+  double weight_sum = accu(wi); //calculate weight sum
 
-  double num = accu( weight * (arma::pow(res,2.0)) );
-  double denom = weight_sum - k;
-  double s =  sqrt(num / denom);
-  //arma:: colvec s2 = sum(weight
+  double num = accu( weight * (arma::pow(res,2.0)) ); //numerator of sigma
+  double denom = weight_sum - k; //denominator of sigma
+  double s =  sqrt(num / denom); //weighted sigma
 
+  //outputs of the variables
   return List::create(Named("coefficients") = coef,
                       Named("weight sum")   = weight_sum,
                       Named("sigma")         = s,

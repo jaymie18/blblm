@@ -9,7 +9,9 @@ Author: person(given = "Jaymie",
            comment = c(ORCID = "YOUR-ORCID-ID"))
 Maintainer: The package maintainer <jmhtam@ucdavis.edu>
 Description: This package perform bag of little bootstrap linear regression with the improvment 
-             of parallelization and use of Rcpp in linear regression to speed up the functions.
+             of parallelization and use of Rcpp in linear regression to speed up the functions,
+             with the addtional functions to calculate weighted sigma, confidence interval, predict
+             new data using the same file.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

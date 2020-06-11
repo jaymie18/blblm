@@ -100,14 +100,12 @@ lm1 <- function(formula, data, freqs) {
   # drop the original closure of formula,
   # otherwise the formula will pick a wront variable from the global scope.
   environment(formula) <- environment()
-  x <- model.matrix(formula , data)
-  y <- model.response(model.frame(formula, data))
-  #fit <- lm(formula, data, weights = freqs)
-  #list(coef = blbcoef(fit), sigma = blbsigma(fit))
+  x <- model.matrix(formula , data) #transform independent variable
+  y <- model.response(model.frame(formula, data)) #transform dependent variable
   fit <- fastlm(x, y, wi = freqs)
-  fit$coefficients <- unlist(as.list(t(fit$coefficients)))
+  fit$coefficients <- unlist(as.list(t(fit$coefficients))) #rename the coefficients
   names(fit$coefficients) <- c(colnames(x))
-  list(coef = blbcoef(fit), sigma = fit$s)
+  list(coef = blbcoef(fit), sigma = fit$s) #list out the information
 }
 
 
